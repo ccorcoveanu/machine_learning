@@ -1,5 +1,13 @@
 import Client from './Client'
+var math =  require('mathjs')
 
+/**
+ * Computes Liniar regression using training sets with one variable
+ * TODO: make it general with dynamic number of variables
+ *
+ * compute() uses gradient descendet to minimize the cost function
+ * computeWithNormalEq uses the notmal equation ti find t0 and t1 .. tn(when generalized)
+ */
 class LiniarRegression {
 
   constructor () {
@@ -14,7 +22,8 @@ class LiniarRegression {
   hypotesis(x) {
     return this.t0 + this.t1 * x;
   }
-k
+
+  // TODO: normalize variables
   async compute() {
     this.set = await this.setTrainingSet()
     this.set = this.set.data
@@ -31,6 +40,38 @@ k
     }
   }
 
+  async computeWithNormalEq() {
+
+    let M, // Element Matrix
+        m = [], // equivalent array
+        MT, // M's transpose
+        y = [], // Solutions array
+        t = [] // variable array
+    ;
+
+    this.set = await this.setTrainingSet()
+    this.set = this.set.data
+    this.m   = this.set.length
+
+    for ( let i = 0; i < this.m; i++ ) {
+      m.push([1, this.set[i].size])
+      y.push(this.set[i].val)
+    }
+
+    M = math.matrix(m)
+    MT = math.transpose(M)
+
+    t = math.multiply(
+      math.inv(math.multiply(MT,M)),
+      math.multiply(MT,y)
+    );
+
+    this.t0 = math.subset(t, math.index(0))
+    this.t1 = math.subset(t, math.index(1))
+
+    return this
+  }
+
   calculateDerivedError(items) {
     let _sum0 = 0;
     let _sum1 = 0;
@@ -43,14 +84,12 @@ k
     return {
       sum0: _sum0/this.m,
       sum1: _sum1/this.m
-    };
+    }
   }
 
   async setTrainingSet () {
     return await this.client.getTrainingSet()
   }
-
-
 }
 
 export default LiniarRegression
